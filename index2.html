@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>nestedSortable jQuery Plugin</title>
+	
+	<link rel="stylesheet" type="text/css" href="css/theme.css">
+	<link rel="stylesheet" type="text/css" href="css/popup.css"/>
+	<link rel="stylesheet" href="jquery/jquery-ui-1.12.1/jquery-ui.min.css" />	
+	<link rel="stylesheet" href="bootstrap-4/css/bootstrap.min.css" />
+
+	<script src="jquery/jquery-3.3.1.min.js"></script>
+	<script src="jquery/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="jquery/jquery.mjs.nestedSortable.js"></script>
+	
+	<!-- para mensaje de eliminar-->
+	<script type="text/javascript" src="js/sweetalert.min.js"></script>
+	
+	<script type="text/javascript" src="bootstrap-4/js/bootstrap.min.js"></script>
+	<script src="js/fontawesome-all.js"></script>
+
+
+	<style type="text/css">
+		
+	</style>
+
+	<script>
+		$().ready(function(){
+			var ns = $('ol.sortable').nestedSortable({
+				forcePlaceholderSize: true,
+				handle: 'div',
+				helper:	'clone',
+				items: 'li',
+				opacity: .6,
+				placeholder: 'placeholder',
+				revert: 250,
+				tabSize: 25,
+				tolerance: 'pointer',
+				toleranceElement: '> div',
+				maxLevels: 2,
+				isTree: true,
+				expandOnHover: 700,
+				startCollapsed: false,
+				change: function(){
+					console.log('Relocated item');
+				}
+			});
+			
+			$('.expandEditor').attr('title','Click to show/hide item editor');
+			$('.disclose').attr('title','Click to show/hide children');
+			$('.deleteMenu').attr('title', 'Click to delete item.');
+		
+			$('.disclose').on('click', function() {
+				$(this).closest('li').toggleClass('mjs-nestedSortable-collapsed').toggleClass('mjs-nestedSortable-expanded');
+				$(this).toggleClass('ui-icon-plusthick').toggleClass('ui-icon-minusthick');
+			});
+			
+			$('.expandEditor, .itemTitle').click(function(){
+				var id = $(this).attr('data-id');
+				$('#menuEdit'+id).toggle();
+				$(this).toggleClass('ui-icon-triangle-1-n').toggleClass('ui-icon-triangle-1-s');
+			});
+			
+			$('.deleteMenu').click(function(){
+				swal({
+				title: "¿Esta seguro?",
+				text: "Se eliminaran el elemento con todo su contenido",
+				icon: "warning",
+				buttons: true,
+				dangerMode: true,
+				})
+				.then((willDelete) => {
+				if (willDelete) {
+				swal("Poof! Eliminado!", {
+				icon: "success",
+				});
+				
+				var id = $(this).attr('data-id');
+				$('#menuItem_'+id).remove();
+
+				} else {
+				swal("Cancelado!");
+				}
+				});
+				
+			});
+				
+			$('#serialize').click(function(){
+				serialized = $('ol.sortable').nestedSortable('serialize');
+				$('#serializeOutput').text(serialized+'\n\n');
+			})
+	
+			$('#toHierarchy').click(function(e){
+				hiered = $('ol.sortable').nestedSortable('toHierarchy', {startDepthCount: 0});
+				hiered = dump(hiered);
+				(typeof($('#toHierarchyOutput')[0].textContent) != 'undefined') ?
+				$('#toHierarchyOutput')[0].textContent = hiered : $('#toHierarchyOutput')[0].innerText = hiered;
+			})
+	
+			$('#toArray').click(function(e){
+				arraied = $('ol.sortable').nestedSortable('toArray', {startDepthCount: 0});
+				arraied = dump(arraied);
+				(typeof($('#toArrayOutput')[0].textContent) != 'undefined') ?
+				$('#toArrayOutput')[0].textContent = arraied : $('#toArrayOutput')[0].innerText = arraied;
+			});
+		});			
+	
+		function dump(arr,level) {
+			var dumped_text = "";
+			if(!level) level = 0;
+	
+			//The padding given at the beginning of the line.
+			var level_padding = "";
+			for(var j=0;j<level+1;j++) level_padding += "    ";
+	
+			if(typeof(arr) == 'object') { //Array/Hashes/Objects
+				for(var item in arr) {
+					var value = arr[item];
+	
+					if(typeof(value) == 'object') { //If it is an array,
+						dumped_text += level_padding + "'" + item + "' ...\n";
+						dumped_text += dump(value,level+1);
+					} else {
+						dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
+					}
+				}
+			} else { //Strings/Chars/Numbers etc.
+				dumped_text = "===>"+arr+"<===("+typeof(arr)+")";
+			}
+			return dumped_text;
+		}
+	</script>
+
+	<script type="text/javascript">
+		
+		var idAsignacion = 0;
+
+		function agregarTitulo()
+		{
+
+			var titulo = document.getElementById('titulo').value;
+
+			if(titulo == ""){
+				swal("Error!", "Rellene todos los campos!", "error");
+				return;
+			}
+
+			idAsignacion++;
+
+			var div = document.getElementById('demo');
+
+			div.innerHTML += '<li style="display: list-item;" class="mjs-nestedSortable-branch mjs-nestedSortable-expanded" id="menuItem_'+idAsignacion+'" data-foo="bar">'
+				   +'<div class="menuDiv">'
+					    +'<span title="Click para mostrar/esconder un elemento" data-id="'+idAsignacion+'" class=" disclose fas fa-caret-up" style="font-size: 150%;" onclick="expandir('+idAsignacion+');">'
+					   +'<span></span>'
+					   +'</span>'
+					   +'<span>'
+					   +'<span data-id="'+idAsignacion+'" class="itemTitle">'+titulo+'</span>'
+					   +'<span title="Click to delete item." data-id="'+idAsignacion+'" class="deleteMenu fas fa-times-circle" style="font-size: 150%;color: #bb321f" onclick="eliminar('+idAsignacion+');">'
+					   +'<span></span>'
+					   +'</span>'
+					   +'</span>'
+					   +'<div id="menuEdit'+idAsignacion+'" class="menuEdit hidden">'
+					   		+'<input type="text" id="nombre'+idAsignacion+'" placeholder="Introduzca el nombre..." name="fname">'
+					   		+'<input type="text" id="descripcion'+idAsignacion+'" placeholder="Introduzca la descripcion" name="fname">'
+							+'<button type="button" onclick="agregarDetalle('+idAsignacion+');" class="btn btn-outline-primary"><i class="fas fa-plus-circle"></i></button>'
+					   +'</div>'
+				   +'</div>'
+				   +'<div id="detalle_'+idAsignacion+'"></div> <br/>'
+				   +'</li>';
+
+			    document.getElementById('titulo').value = "";
+
+			    console.log(div.innerHTML);
+		}
+
+		function eliminar(idEliminar){
+			
+			swal({
+				title: "¿Esta seguro?",
+				text: "Se eliminara el elemento con todo su contenido",
+				icon: "warning",
+				buttons: true,
+				dangerMode: true,
+				})
+				.then((willDelete) => {
+				if (willDelete) {
+				swal("Poof! Eliminado!", {
+				icon: "success",
+				});
+				$('#menuItem_'+idEliminar).remove();
+				} else {
+					swal("Cancelado!", "Se cancelo la eliminacion!", "success");
+				}
+				});
+		}
+
+		
+
+		function expandir(idExpandir){
+			$('#menuEdit'+idExpandir).toggle();
+			$(this).toggleClass('ui-icon-triangle-1-n').toggleClass('ui-icon-triangle-1-s');	
+		}
+
+		var id_detalle = 0;
+		function agregarDetalle(idPadre)
+		{
+			var nombre = document.getElementById('nombre'+idPadre+'').value;
+			var descripcion = document.getElementById('descripcion'+idPadre+'').value;
+			
+			if(nombre == "" || descripcion == ""){
+				swal("Error!", "Rellene todos los campos!", "error");
+				return;
+			}
+
+			id_detalle++;
+
+			var div = document.getElementById('detalle_'+idPadre+'');
+
+			var idDet = idPadre + '_' + id_detalle;
+			idPadDet = "'" + idPadre + '_' + id_detalle + "'";
+			div.innerHTML += '<ol>'
+			   +'<li class="mjs-nestedSortable-leaf" id="menuItem_'+idDet+'">'
+			   +'<div class="menuDiv">'
+				   +'<div id="menuEdit'+idDet+'" class="menuEdit hidden">'
+					    +'<table style="width:100%">'
+						  +'<tr>'
+						    +'<td id="nombre'+idPadDet+'">'+nombre+'</td>'
+						    +'<td id="descripcion'+idPadDet+'">'+descripcion+'</td>'
+						    +'<td style="text-align: right;">'
+						    	+'<button type="button" onclick="Editar()" class="btn btn-outline-secondary" data-toggle="modal" data-target="#myModal"><i class="far fa-edit"></i></button>'
+						    	+'<button type="button" onclick="eliminar('+idPadDet+')" class="btn btn-outline-secondary"><i class="fas fa-trash"></i></button>'
+					    	+'</td>'
+						  +'</tr>'
+						+'</table>'
+				   +'</div>'
+			   +'</div>'
+			   +'</li>'
+		   +'</ol>';
+
+			document.getElementById('nombre'+idPadre+'').value = "";
+			document.getElementById('descripcion'+idPadre+'').value = "";
+
+		}
+
+		var idPadDet = '';
+		function Editar(){
+			document.getElementById('nombreM').value = document.getElementById('nombre' + idPadDet).innerHTML;
+			document.getElementById('descripcionM').value = document.getElementById('descripcion' + idPadDet).innerHTML;
+		}
+		
+		function guardarEdicion(){
+			document.getElementById('nombre' + idPadDet).innerHTML = document.getElementById('nombreM').value;
+			document.getElementById('descripcion' + idPadDet).innerHTML = document.getElementById('descripcionM').value;
+		}
+		
+	</script>
+
+</head>
+
+<body>
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Introduzca el nombre modificado</p>
+        <input type="text" id="nombreM" placeholder="Introduzca la descripcion" name="fname">
+        <br/>
+        <p>Introduzca la descripcion modificada</p>
+        <input type="text" id="descripcionM" placeholder="Introduzca la descripcion" name="fname">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="guardarEdicion()">Guardar</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+    <div class="card">
+
+		<div class="card-header">
+			CATALOGO
+		</div>
+		<div class="card-body">
+			<div class="row justify-content-center">
+				<div class="col col-lg-3">
+					Titulo: 
+				</div>
+				<div class="col col-lg-7">
+					<input class="input-group mb-3" type="text" id="titulo" placeholder="Introduzca el titulo..." name="fname">
+				</div>
+				<div class="col col-lg-2">
+					<button type="button" class="btn btn-outline-primary" onclick="agregarTitulo();"><i class="fas fa-plus-circle"></i></button>
+				</div>
+			</div>
+			<footer class="blockquote-footer">Comienza creando un<cite title="Source Title"> Grupo!</cite></footer>
+		</div>
+	</div>
+	<br/>
+
+    <section >
+		<ol id="demo" class="sortable ui-sortable mjs-nestedSortable-branch mjs-nestedSortable-expanded">
+
+		</ol>
+    </section><!-- END #demo -->
+
+
+</body>
+</html>
+	
